@@ -1,0 +1,88 @@
+{
+  "session_info": {
+    "start_time": "2026-02-18T10:21:24.229973",
+    "total_clicks": 11,
+    "output_dir": "C:\\Python\\automater\\screenshots",
+    "naming_pattern": "PDP_{count}",
+    "image_format": "png"
+  },
+  "clicks": [
+    {
+      "x": 1364,
+      "y": 121,
+      "time": 11.070156812667847,
+      "timestamp": "2026-02-18T10:21:35.300129",
+      "screenshot": "screenshots\\PDP_0001.png"
+    },
+    {
+      "x": 1400,
+      "y": 319,
+      "time": 14.438315629959106,
+      "timestamp": "2026-02-18T10:21:38.668288",
+      "screenshot": "screenshots\\PDP_0002.png"
+    },
+    {
+      "x": 1432,
+      "y": 744,
+      "time": 20.746842622756958,
+      "timestamp": "2026-02-18T10:21:44.976815",
+      "screenshot": "screenshots\\PDP_0003.png"
+    },
+    {
+      "x": 994,
+      "y": 507,
+      "time": 28.80845046043396,
+      "timestamp": "2026-02-18T10:21:53.038423",
+      "screenshot": "screenshots\\PDP_0004.png"
+    },
+    {
+      "x": 1515,
+      "y": 773,
+      "time": 34.77212953567505,
+      "timestamp": "2026-02-18T10:21:59.002102",
+      "screenshot": "screenshots\\PDP_0005.png"
+    },
+    {
+      "x": 963,
+      "y": 517,
+      "time": 39.16555213928223,
+      "timestamp": "2026-02-18T10:22:03.395525",
+      "screenshot": "screenshots\\PDP_0006.png"
+    },
+    {
+      "x": 1818,
+      "y": 176,
+      "time": 47.98697209358215,
+      "timestamp": "2026-02-18T10:22:12.216945",
+      "screenshot": "screenshots\\PDP_0007.png"
+    },
+    {
+      "x": 1761,
+      "y": 273,
+      "time": 50.32007050514221,
+      "timestamp": "2026-02-18T10:22:14.550043",
+      "screenshot": "screenshots\\PDP_0008.png"
+    },
+    {
+      "x": 1474,
+      "y": 437,
+      "time": 53.4726619720459,
+      "timestamp": "2026-02-18T10:22:17.702635",
+      "screenshot": "screenshots\\PDP_0009.png"
+    },
+    {
+      "x": 1817,
+      "y": 1007,
+      "time": 56.349841833114624,
+      "timestamp": "2026-02-18T10:22:20.579814",
+      "screenshot": "screenshots\\PDP_0010.png"
+    },
+    {
+      "x": -106,
+      "y": 587,
+      "time": 63.69194054603577,
+      "timestamp": "2026-02-18T10:22:27.921913",
+      "screenshot": "screenshots\\PDP_0011.png"
+    }
+  ]
+}
