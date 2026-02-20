@@ -7,6 +7,7 @@ import sys
 import json
 import time
 import threading
+import subprocess
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, Callable
@@ -16,6 +17,7 @@ try:
     from pynput.mouse import Button, Controller as MouseController
     import pyautogui
     from PIL import Image
+    from screeninfo import get_monitors
 except ImportError as e:
     print(f"Missing required package: {e}")
     print("Please install dependencies: pip install -r requirements.txt")
@@ -100,6 +102,38 @@ class ScreenshotAutomater:
             print(f"  Error capturing screenshot: {e}")
             return None
     
+    def _get_monitor_info(self, x: int, y: int) -> tuple:
+        """
+        Determine which monitor contains the given coordinates.
+        
+        Returns:
+            tuple: (monitor_number, monitor_name, monitor_info_string)
+        """
+        try:
+            monitors = get_monitors()
+            for i, monitor in enumerate(monitors, 1):
+                if (monitor.x <= x < monitor.x + monitor.width and
+                    monitor.y <= y < monitor.y + monitor.height):
+                    name = monitor.name or f"Monitor {i}"
+                    info = f"Monitor {i}: {name} ({monitor.width}x{monitor.height})"
+                    return (i, name, info)
+            # If not found in any monitor bounds, return primary
+            return (1, "Unknown", "Monitor 1 (primary)")
+        except Exception:
+            return (1, "Unknown", "Monitor detection unavailable")
+    
+    def _list_monitors(self):
+        """Print information about all connected monitors."""
+        try:
+            monitors = get_monitors()
+            print(f"\nDetected {len(monitors)} monitor(s):")
+            for i, monitor in enumerate(monitors, 1):
+                name = monitor.name or f"Display {i}"
+                primary = " (primary)" if monitor.is_primary else ""
+                print(f"  {i}. {name}: {monitor.width}x{monitor.height} at ({monitor.x}, {monitor.y}){primary}")
+        except Exception as e:
+            print(f"Could not detect monitors: {e}")
+    
     def _on_click(self, x: int, y: int, button: Button, pressed: bool):
         """Handle mouse click events."""
         # Only capture on button press (not release), and only left clicks
@@ -108,13 +142,17 @@ class ScreenshotAutomater:
             
         if self.is_paused:
             return
-            
-        print(f"Click detected at ({x}, {y})")
+        
+        # Get monitor information
+        monitor_num, monitor_name, monitor_info = self._get_monitor_info(x, y)
+        print(f"Click detected at ({x}, {y}) - {monitor_info}")
         
         # Record the click position and time
         click_data = {
             "x": x,
             "y": y,
+            "monitor": monitor_num,
+            "monitor_name": monitor_name,
             "time": time.time() - self.session_start_time,
             "timestamp": datetime.now().isoformat()
         }
@@ -144,6 +182,7 @@ class ScreenshotAutomater:
         print(f"Output directory: {self.output_dir.absolute()}")
         print(f"Naming pattern: {self.naming_pattern}")
         print(f"Image format: {self.image_format}")
+        self._list_monitors()
         print("-"*50)
         print("Controls:")
         print("  - Click anywhere to capture a screenshot")
@@ -180,6 +219,9 @@ class ScreenshotAutomater:
         print(f"Total screenshots captured: {self.click_count}")
         print(f"Workflow saved to: {self.workflow_file}")
         print("="*50 + "\n")
+        
+        # Prompt user for post-capture action
+        self._prompt_post_capture_action()
     
     def _save_workflow(self):
         """Save the recorded workflow to a JSON file."""
@@ -198,6 +240,214 @@ class ScreenshotAutomater:
         with open(workflow_path, 'w') as f:
             json.dump(workflow_data, f, indent=2)
     
+    def _prompt_post_capture_action(self):
+        """Prompt user for action after capture completes."""
+        if self.click_count == 0:
+            return
+            
+        print("\nWhat would you like to do with the captured files?")
+        print("  1. Open destination folder in File Explorer")
+        print("  2. Import files into a Camtasia project")
+        print("  3. Delete all captured screenshots")
+        print("  4. Do nothing (exit)")
+        
+        try:
+            choice = input("\nEnter choice (1-4): ").strip()
+            
+            if choice == "1":
+                self._open_in_explorer()
+            elif choice == "2":
+                self._import_to_camtasia()
+            elif choice == "3":
+                self._delete_captured_screenshots()
+            else:
+                print("Done.")
+        except (KeyboardInterrupt, EOFError):
+            print("\nExiting...")
+    
+    def _open_in_explorer(self):
+        """Open the output directory in Windows File Explorer."""
+        folder_path = self.output_dir.absolute()
+        
+        try:
+            if sys.platform == "win32":
+                os.startfile(str(folder_path))
+            elif sys.platform == "darwin":
+                subprocess.run(["open", str(folder_path)], check=True)
+            else:
+                subprocess.run(["xdg-open", str(folder_path)], check=True)
+            print(f"Opened folder: {folder_path}")
+        except Exception as e:
+            print(f"Error opening folder: {e}")
+            print(f"You can manually navigate to: {folder_path}")
+    
+    def _delete_captured_screenshots(self):
+        """Delete all captured screenshots from this session."""
+        folder_path = self.output_dir.absolute()
+        
+        # Get list of captured screenshot files
+        screenshot_files = sorted([
+            f for f in folder_path.iterdir()
+            if f.suffix.lower() in ['.png', '.jpg', '.jpeg', '.bmp']
+        ])
+        
+        if not screenshot_files:
+            print("No screenshot files found to delete.")
+            return
+        
+        print(f"\nThis will delete {len(screenshot_files)} screenshot(s):")
+        for f in screenshot_files[:5]:
+            print(f"  - {f.name}")
+        if len(screenshot_files) > 5:
+            print(f"  ... and {len(screenshot_files) - 5} more")
+        
+        confirm = input("\nAre you sure you want to delete these files? (y/n): ").strip().lower()
+        
+        if confirm == 'y':
+            deleted_count = 0
+            for f in screenshot_files:
+                try:
+                    f.unlink()
+                    deleted_count += 1
+                except Exception as e:
+                    print(f"Error deleting {f.name}: {e}")
+            
+            # Also delete the workflow file if it exists
+            workflow_path = folder_path / self.workflow_file
+            if workflow_path.exists():
+                try:
+                    workflow_path.unlink()
+                    print(f"Deleted workflow file: {self.workflow_file}")
+                except Exception as e:
+                    print(f"Error deleting workflow file: {e}")
+            
+            print(f"\nDeleted {deleted_count} screenshot(s).")
+            
+            # Check if folder is empty and offer to delete it
+            remaining = list(folder_path.iterdir())
+            if not remaining:
+                delete_folder = input("Folder is now empty. Delete the folder too? (y/n): ").strip().lower()
+                if delete_folder == 'y':
+                    try:
+                        folder_path.rmdir()
+                        print(f"Deleted folder: {folder_path}")
+                    except Exception as e:
+                        print(f"Error deleting folder: {e}")
+        else:
+            print("Deletion cancelled.")
+
+    def _import_to_camtasia(self):
+        """Import captured screenshots into a Camtasia project."""
+        folder_path = self.output_dir.absolute()
+        
+        # Get list of captured screenshot files
+        screenshot_files = sorted([
+            f for f in folder_path.iterdir()
+            if f.suffix.lower() in ['.png', '.jpg', '.jpeg', '.bmp']
+        ])
+        
+        if not screenshot_files:
+            print("No screenshot files found to import.")
+            return
+        
+        print(f"\nFound {len(screenshot_files)} screenshot(s) to import.")
+        
+        # Try to find Camtasia installation
+        camtasia_paths = [
+            r"C:\Program Files\TechSmith\Camtasia 2025\CamtasiaStudio.exe",
+            r"C:\Program Files\TechSmith\Camtasia 2024\CamtasiaStudio.exe",
+            r"C:\Program Files\TechSmith\Camtasia 2023\CamtasiaStudio.exe",
+            r"C:\Program Files\TechSmith\Camtasia 2022\CamtasiaStudio.exe",
+            r"C:\Program Files\TechSmith\Camtasia 2021\CamtasiaStudio.exe",
+            r"C:\Program Files\TechSmith\Camtasia 2020\CamtasiaStudio.exe",
+            r"C:\Program Files (x86)\TechSmith\Camtasia 2025\CamtasiaStudio.exe",
+            r"C:\Program Files (x86)\TechSmith\Camtasia 2024\CamtasiaStudio.exe",
+            r"C:\Program Files (x86)\TechSmith\Camtasia 2023\CamtasiaStudio.exe",
+        ]
+        
+        camtasia_exe = None
+        for path in camtasia_paths:
+            if Path(path).exists():
+                camtasia_exe = path
+                break
+        
+        if not camtasia_exe:
+            print("Camtasia installation not found in standard locations.")
+            custom_path = input("\nEnter path to Camtasia installation folder (or press Enter to skip): ").strip()
+            
+            if custom_path:
+                # Try to find the executable in the provided path
+                custom_path = Path(custom_path)
+                possible_exe = custom_path / "CamtasiaStudio.exe"
+                if possible_exe.exists():
+                    camtasia_exe = str(possible_exe)
+                elif custom_path.exists() and custom_path.suffix.lower() == '.exe':
+                    # User provided direct path to exe
+                    camtasia_exe = str(custom_path)
+                else:
+                    print(f"Could not find CamtasiaStudio.exe in: {custom_path}")
+        
+        if camtasia_exe:
+            print(f"Found Camtasia at: {camtasia_exe}")
+            print("\nOptions:")
+            print("  1. Open Camtasia and File Explorer (drag files to Media Bin)")
+            print("  2. Open Camtasia and copy file paths to clipboard")
+            
+            sub_choice = input("\nEnter choice (1-2): ").strip()
+            
+            if sub_choice == "1":
+                # Open Camtasia and then open explorer with files selected
+                try:
+                    subprocess.Popen([camtasia_exe])
+                    print("Camtasia is starting...")
+                    time.sleep(2)
+                    # Open explorer with first file selected
+                    subprocess.run(["explorer", "/select,", str(screenshot_files[0])], check=False)
+                    print("File Explorer opened. Select all files and drag them to the Camtasia Media Bin.")
+                except Exception as e:
+                    print(f"Error launching Camtasia: {e}")
+            else:
+                self._copy_files_to_clipboard(screenshot_files, camtasia_exe)
+        else:
+            print("\nOptions:")
+            print("  1. Copy file paths to clipboard (for pasting into Camtasia Import)")
+            print("  2. Open folder in File Explorer instead")
+            
+            sub_choice = input("\nEnter choice (1-2): ").strip()
+            
+            if sub_choice == "1":
+                self._copy_files_to_clipboard(screenshot_files, None)
+            else:
+                self._open_in_explorer()
+    
+    def _copy_files_to_clipboard(self, screenshot_files: list, camtasia_exe: str = None):
+        """Copy file paths to clipboard and optionally open Camtasia."""
+        try:
+            import pyperclip
+            
+            # Format paths for clipboard - use quotes and separate by newlines
+            file_paths = "\n".join([f'"{f.absolute()}"' for f in screenshot_files])
+            pyperclip.copy(file_paths)
+            
+            print(f"\nCopied {len(screenshot_files)} file path(s) to clipboard!")
+            print("\nTo import into Camtasia:")
+            print("  1. In Camtasia, go to File > Import > Media...")
+            print("  2. In the file dialog, paste (Ctrl+V) the paths into the filename field")
+            print("  3. Click Open to import all files")
+            
+            if camtasia_exe:
+                open_camtasia = input("\nOpen Camtasia now? (y/n): ").strip().lower()
+                if open_camtasia == 'y':
+                    subprocess.Popen([camtasia_exe])
+                    print("Camtasia is starting...")
+                    
+        except ImportError:
+            print("pyperclip not available. File paths:")
+            for f in screenshot_files:
+                print(f"  {f.absolute()}")
+        except Exception as e:
+            print(f"Error copying to clipboard: {e}")
+
     def load_workflow(self, workflow_path: str = None) -> bool:
         """Load a previously recorded workflow."""
         if workflow_path is None:
@@ -309,6 +559,10 @@ class ScreenshotAutomater:
         print(f"Screenshots captured: {self.click_count}")
         print(f"Saved to: {self.output_dir.absolute()}")
         print("="*50 + "\n")
+        
+        # Prompt user for post-capture action
+        if capture_screenshots:
+            self._prompt_post_capture_action()
 
 
 def main():

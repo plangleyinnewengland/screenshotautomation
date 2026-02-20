@@ -153,3 +153,20 @@ Run: `pip install -r requirements.txt`
 ## License
 
 MIT License
+
+## User Guide (PSL)
+
+### Capture
+
+1. Open the screenshot.bat
+2. Move the window to a secondary monitor
+3. in the primary monitor, open up the browser to the page where you want to start the captures
+4. exapnd the browser window to full screen mode (f11)
+5. start the capture (option 1)
+6. Select the output directory
+7. Select the naming convention
+8. Select an image format
+9. Then click anywhere to start the captures
+10. The tool captures the primary monitor
+
+### replay
