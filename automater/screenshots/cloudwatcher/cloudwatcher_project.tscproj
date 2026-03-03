@@ -1,0 +1,144 @@
+<?xml version="1.0" ?>
+<Project version="1" guid="D433D52A-CA88-4851-A455-5E9A6B631BFA">
+  <ProjectSettings>
+    <Width>1920</Width>
+    <Height>1080</Height>
+    <FrameRate>30.0</FrameRate>
+    <AudioSampleRate>44100</AudioSampleRate>
+    <AudioChannels>2</AudioChannels>
+  </ProjectSettings>
+  <MediaBin>
+    <Media id="DD1B22F2-BB71-420C-A687-45AD7E77C95C" type="image">
+      <FilePath>C:\Python\automater\screenshots\cloudwatcher\cloud_0001.png</FilePath>
+      <FileName>cloud_0001.png</FileName>
+      <Width>1920</Width>
+      <Height>1080</Height>
+      <Duration>150</Duration>
+    </Media>
+    <Media id="74C6260C-D6AC-457B-80FF-D7F046BFA2F0" type="image">
+      <FilePath>C:\Python\automater\screenshots\cloudwatcher\cloud_0002.png</FilePath>
+      <FileName>cloud_0002.png</FileName>
+      <Width>1920</Width>
+      <Height>1080</Height>
+      <Duration>150</Duration>
+    </Media>
+    <Media id="78C08E8A-9D18-4AD3-8AF3-E9DAA4F5CDEA" type="image">
+      <FilePath>C:\Python\automater\screenshots\cloudwatcher\cloud_0003.png</FilePath>
+      <FileName>cloud_0003.png</FileName>
+      <Width>1920</Width>
+      <Height>1080</Height>
+      <Duration>150</Duration>
+    </Media>
+    <Media id="273B37A7-E77A-4B48-B4DF-41302CAD9139" type="image">
+      <FilePath>C:\Python\automater\screenshots\cloudwatcher\cloud_0004.png</FilePath>
+      <FileName>cloud_0004.png</FileName>
+      <Width>1920</Width>
+      <Height>1080</Height>
+      <Duration>150</Duration>
+    </Media>
+    <Media id="8557A597-0B35-4916-AB2B-8821010667C4" type="image">
+      <FilePath>C:\Python\automater\screenshots\cloudwatcher\cloud_0005.png</FilePath>
+      <FileName>cloud_0005.png</FileName>
+      <Width>1920</Width>
+      <Height>1080</Height>
+      <Duration>150</Duration>
+    </Media>
+    <Media id="4DF28E5A-E631-45D5-98BC-C57848C03B10" type="image">
+      <FilePath>C:\Python\automater\screenshots\cloudwatcher\cloud_0006.png</FilePath>
+      <FileName>cloud_0006.png</FileName>
+      <Width>1920</Width>
+      <Height>1080</Height>
+      <Duration>150</Duration>
+    </Media>
+    <Media id="CE748241-38BF-4CEF-82CB-8A4EFEDA9ADD" type="image">
+      <FilePath>C:\Python\automater\screenshots\cloudwatcher\cloud_0007.png</FilePath>
+      <FileName>cloud_0007.png</FileName>
+      <Width>1920</Width>
+      <Height>1080</Height>
+      <Duration>150</Duration>
+    </Media>
+    <Media id="2F1CCDC2-CE7B-4E74-BABC-CC107EA40C29" type="image">
+      <FilePath>C:\Python\automater\screenshots\cloudwatcher\cloud_0008.png</FilePath>
+      <FileName>cloud_0008.png</FileName>
+      <Width>1920</Width>
+      <Height>1080</Height>
+      <Duration>150</Duration>
+    </Media>
+    <Media id="34DF2859-C15B-4A3E-892C-4865D12F4BAC" type="image">
+      <FilePath>C:\Python\automater\screenshots\cloudwatcher\cloud_0009.png</FilePath>
+      <FileName>cloud_0009.png</FileName>
+      <Width>1920</Width>
+      <Height>1080</Height>
+      <Duration>150</Duration>
+    </Media>
+  </MediaBin>
+  <Timeline>
+    <Track type="video" name="Track 1">
+      <Clip id="A86F5237-296B-4F48-8A32-06BA1EE736AF" mediaId="DD1B22F2-BB71-420C-A687-45AD7E77C95C">
+        <Start>0</Start>
+        <Duration>150</Duration>
+        <MediaStart>0</MediaStart>
+        <FileName>cloud_0001.png</FileName>
+        <FilePath>C:\Python\automater\screenshots\cloudwatcher\cloud_0001.png</FilePath>
+      </Clip>
+      <Clip id="C9E3DEFF-CD34-43A5-9815-0589C8E837A4" mediaId="74C6260C-D6AC-457B-80FF-D7F046BFA2F0">
+        <Start>150</Start>
+        <Duration>150</Duration>
+        <MediaStart>0</MediaStart>
+        <FileName>cloud_0002.png</FileName>
+        <FilePath>C:\Python\automater\screenshots\cloudwatcher\cloud_0002.png</FilePath>
+      </Clip>
+      <Clip id="C78D39D3-D65B-4574-907F-C0CB9D59B692" mediaId="78C08E8A-9D18-4AD3-8AF3-E9DAA4F5CDEA">
+        <Start>300</Start>
+        <Duration>150</Duration>
+        <MediaStart>0</MediaStart>
+        <FileName>cloud_0003.png</FileName>
+        <FilePath>C:\Python\automater\screenshots\cloudwatcher\cloud_0003.png</FilePath>
+      </Clip>
+      <Clip id="FD112B2C-1C87-43CF-AB3B-F2EC58E97229" mediaId="273B37A7-E77A-4B48-B4DF-41302CAD9139">
+        <Start>450</Start>
+        <Duration>150</Duration>
+        <MediaStart>0</MediaStart>
+        <FileName>cloud_0004.png</FileName>
+        <FilePath>C:\Python\automater\screenshots\cloudwatcher\cloud_0004.png</FilePath>
+      </Clip>
+      <Clip id="4A2E22A7-71E6-47FD-8DE7-7B35B6072FDB" mediaId="8557A597-0B35-4916-AB2B-8821010667C4">
+        <Start>600</Start>
+        <Duration>150</Duration>
+        <MediaStart>0</MediaStart>
+        <FileName>cloud_0005.png</FileName>
+        <FilePath>C:\Python\automater\screenshots\cloudwatcher\cloud_0005.png</FilePath>
+      </Clip>
+      <Clip id="E65331AC-B7D6-4207-B149-1E83545A0AD3" mediaId="4DF28E5A-E631-45D5-98BC-C57848C03B10">
+        <Start>750</Start>
+        <Duration>150</Duration>
+        <MediaStart>0</MediaStart>
+        <FileName>cloud_0006.png</FileName>
+        <FilePath>C:\Python\automater\screenshots\cloudwatcher\cloud_0006.png</FilePath>
+      </Clip>
+      <Clip id="EFA40A8F-0DA9-4131-9328-03D4966556CC" mediaId="CE748241-38BF-4CEF-82CB-8A4EFEDA9ADD">
+        <Start>900</Start>
+        <Duration>150</Duration>
+        <MediaStart>0</MediaStart>
+        <FileName>cloud_0007.png</FileName>
+        <FilePath>C:\Python\automater\screenshots\cloudwatcher\cloud_0007.png</FilePath>
+      </Clip>
+      <Clip id="CDFA887C-239B-42B3-B2A4-D4E5DB83F8ED" mediaId="2F1CCDC2-CE7B-4E74-BABC-CC107EA40C29">
+        <Start>1050</Start>
+        <Duration>150</Duration>
+        <MediaStart>0</MediaStart>
+        <FileName>cloud_0008.png</FileName>
+        <FilePath>C:\Python\automater\screenshots\cloudwatcher\cloud_0008.png</FilePath>
+      </Clip>
+      <Clip id="77DE45C8-6253-4C43-BA5A-85D345630E69" mediaId="34DF2859-C15B-4A3E-892C-4865D12F4BAC">
+        <Start>1200</Start>
+        <Duration>150</Duration>
+        <MediaStart>0</MediaStart>
+        <FileName>cloud_0009.png</FileName>
+        <FilePath>C:\Python\automater\screenshots\cloudwatcher\cloud_0009.png</FilePath>
+      </Clip>
+    </Track>
+    <Track type="audio" name="Track 2"/>
+    <TotalDuration>1350</TotalDuration>
+  </Timeline>
+</Project>

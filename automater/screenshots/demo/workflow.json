@@ -1,0 +1,10 @@
+{
+  "session_info": {
+    "start_time": "2026-02-20T17:38:47.862440",
+    "total_clicks": 0,
+    "output_dir": "C:\\Python\\automater\\screenshots\\demo",
+    "naming_pattern": "{timestamp}_{count}",
+    "image_format": "png"
+  },
+  "clicks": []
+}

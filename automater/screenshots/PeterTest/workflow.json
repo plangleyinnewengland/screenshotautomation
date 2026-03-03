@@ -1,0 +1,101 @@
+{
+  "session_info": {
+    "start_time": "2026-02-26T16:20:06.891721",
+    "total_clicks": 6,
+    "output_dir": "C:\\Python\\automater\\screenshots\\PeterTest",
+    "naming_pattern": "screenshot_{count}",
+    "image_format": "png"
+  },
+  "clicks": [
+    {
+      "x": 396,
+      "y": 364,
+      "rel_x": 0.20625,
+      "rel_y": 0.337037037037037,
+      "monitor": 4,
+      "monitor_name": "\\\\.\\DISPLAY6",
+      "monitor_width": 1920,
+      "monitor_height": 1080,
+      "monitor_x_offset": 0,
+      "monitor_y_offset": 0,
+      "time": 5.072232484817505,
+      "timestamp": "2026-02-26T16:20:11.963953",
+      "screenshot": "C:\\Python\\automater\\screenshots\\PeterTest\\screenshot_0001.png"
+    },
+    {
+      "x": 671,
+      "y": 945,
+      "rel_x": 0.3494791666666667,
+      "rel_y": 0.875,
+      "monitor": 4,
+      "monitor_name": "\\\\.\\DISPLAY6",
+      "monitor_width": 1920,
+      "monitor_height": 1080,
+      "monitor_x_offset": 0,
+      "monitor_y_offset": 0,
+      "time": 9.546732902526855,
+      "timestamp": "2026-02-26T16:20:16.438454",
+      "screenshot": "C:\\Python\\automater\\screenshots\\PeterTest\\screenshot_0002.png"
+    },
+    {
+      "x": 1182,
+      "y": 72,
+      "rel_x": 0.615625,
+      "rel_y": 0.06666666666666667,
+      "monitor": 4,
+      "monitor_name": "\\\\.\\DISPLAY6",
+      "monitor_width": 1920,
+      "monitor_height": 1080,
+      "monitor_x_offset": 0,
+      "monitor_y_offset": 0,
+      "time": 15.507120132446289,
+      "timestamp": "2026-02-26T16:20:22.398841",
+      "screenshot": "C:\\Python\\automater\\screenshots\\PeterTest\\screenshot_0003.png"
+    },
+    {
+      "x": 1333,
+      "y": 557,
+      "rel_x": 0.6942708333333333,
+      "rel_y": 0.5157407407407407,
+      "monitor": 4,
+      "monitor_name": "\\\\.\\DISPLAY6",
+      "monitor_width": 1920,
+      "monitor_height": 1080,
+      "monitor_x_offset": 0,
+      "monitor_y_offset": 0,
+      "time": 33.67585754394531,
+      "timestamp": "2026-02-26T16:20:40.567578",
+      "screenshot": "C:\\Python\\automater\\screenshots\\PeterTest\\screenshot_0004.png"
+    },
+    {
+      "x": 1670,
+      "y": 250,
+      "rel_x": 0.8697916666666666,
+      "rel_y": 0.23148148148148148,
+      "monitor": 4,
+      "monitor_name": "\\\\.\\DISPLAY6",
+      "monitor_width": 1920,
+      "monitor_height": 1080,
+      "monitor_x_offset": 0,
+      "monitor_y_offset": 0,
+      "time": 37.12341380119324,
+      "timestamp": "2026-02-26T16:20:44.015134",
+      "screenshot": "C:\\Python\\automater\\screenshots\\PeterTest\\screenshot_0005.png"
+    },
+    {
+      "x": 3079,
+      "y": 862,
+      "rel_x": 0.56591796875,
+      "rel_y": 0.8385416666666666,
+      "monitor": 1,
+      "monitor_name": "\\\\.\\DISPLAY5",
+      "monitor_width": 2048,
+      "monitor_height": 1152,
+      "monitor_x_offset": 1920,
+      "monitor_y_offset": -104,
+      "time": 44.1919949054718,
+      "timestamp": "2026-02-26T16:20:51.083715",
+      "screenshot": "C:\\Python\\automater\\screenshots\\PeterTest\\screenshot_0006.png"
+    }
+  ]
+}

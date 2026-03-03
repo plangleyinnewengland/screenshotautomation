@@ -1,0 +1,49 @@
+{
+  "images": [
+    {
+      "image_path": "C:\\Python\\automater\\screenshots\\PeterTest\\screenshot_0001.png",
+      "narration": "Good afternoon.",
+      "duration": null,
+      "transition": null
+    },
+    {
+      "image_path": "C:\\Python\\automater\\screenshots\\PeterTest\\screenshot_0002.png",
+      "narration": "I am Peter Langley",
+      "duration": null,
+      "transition": null
+    },
+    {
+      "image_path": "C:\\Python\\automater\\screenshots\\PeterTest\\screenshot_0003.png",
+      "narration": "and this is live",
+      "duration": null,
+      "transition": null
+    },
+    {
+      "image_path": "C:\\Python\\automater\\screenshots\\PeterTest\\screenshot_0004.png",
+      "narration": "audio",
+      "duration": null,
+      "transition": null
+    },
+    {
+      "image_path": "C:\\Python\\automater\\screenshots\\PeterTest\\screenshot_0005.png",
+      "narration": "about",
+      "duration": null,
+      "transition": null
+    },
+    {
+      "image_path": "C:\\Python\\automater\\screenshots\\PeterTest\\screenshot_0006.png",
+      "narration": "the script",
+      "duration": null,
+      "transition": null
+    }
+  ],
+  "resolution": [
+    1920,
+    1080
+  ],
+  "default_transition": "fade",
+  "transition_duration": 1.0,
+  "enable_narration": true,
+  "voice_id": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens\\TTS_MS_EN-US_DAVID_11.0",
+  "image_dir": "C:\\Python\\automater\\screenshots\\PeterTest"
+}

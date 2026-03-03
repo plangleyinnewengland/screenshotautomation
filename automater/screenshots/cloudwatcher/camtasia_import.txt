@@ -1,0 +1,36 @@
+============================================================
+CAMTASIA IMPORT INSTRUCTIONS
+============================================================
+
+Folder: C:\Python\automater\screenshots\cloudwatcher
+Images found: 9
+
+METHOD 1 - Drag and Drop:
+----------------------------------------
+1. Open Camtasia
+2. Open this folder in File Explorer
+3. Select all images (Ctrl+A)
+4. Drag them to the Camtasia Media Bin
+5. Then drag from Media Bin to Timeline
+
+METHOD 2 - File Import:
+----------------------------------------
+1. In Camtasia: File > Import > Media
+2. Navigate to the folder listed above
+3. Select all images and click Open
+
+METHOD 3 - Copy Paths:
+----------------------------------------
+Run 'copy_paths_to_clipboard.bat' to copy all paths
+
+IMAGE FILES:
+----------------------------------------
+C:\Python\automater\screenshots\cloudwatcher\cloud_0001.png
+C:\Python\automater\screenshots\cloudwatcher\cloud_0002.png
+C:\Python\automater\screenshots\cloudwatcher\cloud_0003.png
+C:\Python\automater\screenshots\cloudwatcher\cloud_0004.png
+C:\Python\automater\screenshots\cloudwatcher\cloud_0005.png
+C:\Python\automater\screenshots\cloudwatcher\cloud_0006.png
+C:\Python\automater\screenshots\cloudwatcher\cloud_0007.png
+C:\Python\automater\screenshots\cloudwatcher\cloud_0008.png
+C:\Python\automater\screenshots\cloudwatcher\cloud_0009.png
