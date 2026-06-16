@@ -1,0 +1,16 @@
+pynput>=1.7.6
+pyautogui>=0.9.54
+Pillow>=9.0.0
+screeninfo>=0.8.1
+
+# Selenium browser automation
+selenium>=4.15.0
+
+# Video generation dependencies
+moviepy>=1.0.3
+pyttsx3>=2.90
+numpy>=1.21.0
+
+# PowerPoint conversion
+python-pptx>=0.6.21
+comtypes>=1.2.0  # Windows only - for PowerPoint COM automation
