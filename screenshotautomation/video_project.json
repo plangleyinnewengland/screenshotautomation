@@ -1,0 +1,67 @@
+{
+  "images": [
+    {
+      "image_path": "C:\\Python\\automater\\screenshots\\cloudwatcher\\cloud_0001.png",
+      "narration": "welcome",
+      "duration": null,
+      "transition": null
+    },
+    {
+      "image_path": "C:\\Python\\automater\\screenshots\\cloudwatcher\\cloud_0002.png",
+      "narration": "select from this screen",
+      "duration": null,
+      "transition": null
+    },
+    {
+      "image_path": "C:\\Python\\automater\\screenshots\\cloudwatcher\\cloud_0003.png",
+      "narration": "also do things over here",
+      "duration": null,
+      "transition": null
+    },
+    {
+      "image_path": "C:\\Python\\automater\\screenshots\\cloudwatcher\\cloud_0004.png",
+      "narration": "This is a cool screen",
+      "duration": null,
+      "transition": null
+    },
+    {
+      "image_path": "C:\\Python\\automater\\screenshots\\cloudwatcher\\cloud_0005.png",
+      "narration": "i am great",
+      "duration": null,
+      "transition": null
+    },
+    {
+      "image_path": "C:\\Python\\automater\\screenshots\\cloudwatcher\\cloud_0006.png",
+      "narration": "",
+      "duration": null,
+      "transition": null
+    },
+    {
+      "image_path": "C:\\Python\\automater\\screenshots\\cloudwatcher\\cloud_0007.png",
+      "narration": "",
+      "duration": null,
+      "transition": null
+    },
+    {
+      "image_path": "C:\\Python\\automater\\screenshots\\cloudwatcher\\cloud_0008.png",
+      "narration": "",
+      "duration": null,
+      "transition": null
+    },
+    {
+      "image_path": "C:\\Python\\automater\\screenshots\\cloudwatcher\\cloud_0009.png",
+      "narration": "",
+      "duration": null,
+      "transition": null
+    }
+  ],
+  "resolution": [
+    1920,
+    1080
+  ],
+  "default_transition": "fade",
+  "transition_duration": 1.0,
+  "enable_narration": true,
+  "voice_id": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens\\TTS_MS_EN-US_DAVID_11.0",
+  "image_dir": "C:\\Python\\automater\\screenshots\\cloudwatcher"
+}

@@ -1,0 +1,71 @@
+{
+  "session_info": {
+    "start_time": "2026-06-16T11:34:28.353432",
+    "total_clicks": 4,
+    "output_dir": "D:\\GitHub\\Video Production Apps\\screenshot automater\\screenshotautomation\\screenshots",
+    "naming_pattern": "{timestamp}_{count}",
+    "image_format": "png"
+  },
+  "clicks": [
+    {
+      "x": 680,
+      "y": 260,
+      "rel_x": 0.3541666666666667,
+      "rel_y": 0.24074074074074073,
+      "monitor": 1,
+      "monitor_name": "\\\\.\\DISPLAY5",
+      "monitor_width": 1920,
+      "monitor_height": 1080,
+      "monitor_x_offset": 0,
+      "monitor_y_offset": 0,
+      "time": 9.615497350692749,
+      "timestamp": "2026-06-16T11:34:37.968929",
+      "screenshot": "screenshots\\20260616_113437_0001.png"
+    },
+    {
+      "x": 516,
+      "y": 326,
+      "rel_x": 0.26875,
+      "rel_y": 0.30185185185185187,
+      "monitor": 1,
+      "monitor_name": "\\\\.\\DISPLAY5",
+      "monitor_width": 1920,
+      "monitor_height": 1080,
+      "monitor_x_offset": 0,
+      "monitor_y_offset": 0,
+      "time": 14.751974105834961,
+      "timestamp": "2026-06-16T11:34:43.105405",
+      "screenshot": "screenshots\\20260616_113443_0002.png"
+    },
+    {
+      "x": 147,
+      "y": 160,
+      "rel_x": 0.0765625,
+      "rel_y": 0.14814814814814814,
+      "monitor": 1,
+      "monitor_name": "\\\\.\\DISPLAY5",
+      "monitor_width": 1920,
+      "monitor_height": 1080,
+      "monitor_x_offset": 0,
+      "monitor_y_offset": 0,
+      "time": 19.815516471862793,
+      "timestamp": "2026-06-16T11:34:48.168948",
+      "screenshot": "screenshots\\20260616_113448_0003.png"
+    },
+    {
+      "x": 2905,
+      "y": 949,
+      "rel_x": 0.5130208333333334,
+      "rel_y": 0.6814814814814815,
+      "monitor": 2,
+      "monitor_name": "\\\\.\\DISPLAY6",
+      "monitor_width": 1920,
+      "monitor_height": 1080,
+      "monitor_x_offset": 1920,
+      "monitor_y_offset": 213,
+      "time": 23.956010341644287,
+      "timestamp": "2026-06-16T11:34:52.309442",
+      "screenshot": "screenshots\\20260616_113452_0004.png"
+    }
+  ]
+}
