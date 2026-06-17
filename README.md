@@ -8,6 +8,7 @@ A Python application that captures screenshots every time you click and can repl
 - **Custom Naming**: Use flexible naming patterns for your screenshots
 - **Workflow Recording**: Records click positions and timing for replay
 - **Workflow Replay**: Re-execute your recorded clicks and capture new screenshots
+- **Video Generation**: Create MP4 videos from images with narration and transitions
 - **Interactive & CLI modes**: Use from command line or interactive prompts
 
 ## Installation
@@ -20,7 +21,28 @@ pip install -r requirements.txt
 
 ## Usage
 
-### Interactive Mode
+### Graphical User Interface (GUI)
+
+For the easiest experience, launch the GUI application:
+
+```bash
+python screenshot_automater_gui.py
+```
+
+Or use the batch file:
+
+```bash
+run_screenshot_gui.bat
+```
+
+**GUI Features:**
+- **Record Tab**: Configure output directory, naming patterns, and image format, then click to capture screenshots
+- **Replay Tab**: Load workflow files and replay recorded click sequences with customizable delays
+- **Video Tab**: Quick access to video generation and the visual narration editor
+- **Monitor Display**: View connected monitors and their configurations
+- **Real-time Status**: See click counts and capture status while recording
+
+### Interactive Mode (CLI)
 
 Simply run the script without arguments:
 
@@ -55,6 +77,79 @@ Options:
 - `-d, --delay`: Delay multiplier (default: 1.0)
 - `-m, --min-delay`: Minimum delay between clicks in seconds (default: 0.5)
 - `--no-capture`: Don't capture screenshots during replay (just replay clicks)
+
+#### Creating Videos from Images
+
+Create an MP4 video from a directory of images with narration and transitions:
+
+```bash
+python screenshot_automater.py video -i my_screenshots
+```
+
+Or create a video directly from a recorded workflow:
+
+```bash
+python screenshot_automater.py video -i my_screenshots/workflow.json
+```
+
+Options:
+- `-i, --input`: Path to image directory or workflow JSON file
+- `-o, --output`: Output video file path
+- `-p, --project`: Load a saved video project file
+
+### Video Generation Features
+
+- **Multiple image formats**: PNG, JPG, JPEG, BMP, GIF, TIFF, WEBP
+- **Custom resolutions**: 1080p, 720p, 4K, or custom
+- **Text-to-Speech narration**: Enter narration scripts for each image
+- **Multiple voices**: Choose from available system TTS voices
+- **Transitions**: None, Fade, Crossfade, Slide (left/right/up/down)
+- **Per-image settings**: Custom duration and transitions per image
+- **Project saving**: Save configurations for later editing
+
+### Video Interactive Mode
+
+When running in interactive mode, you'll be prompted for:
+
+1. **Image directory**: Folder containing your images
+2. **Resolution**: Output video resolution (1080p, 720p, 4K, or custom)
+3. **Default duration**: How long each image displays (auto-adjusts for narration)
+4. **Transition type**: Effect between images
+5. **Narration**: Text-to-speech script for each image (optional)
+6. **Voice selection**: Choose from available TTS voices
+7. **Output file**: Where to save the final MP4
+
+### Visual Narration Editor (GUI)
+
+For a more visual experience, use the GUI editor:
+
+```bash
+python screenshot_automater.py editor
+```
+
+Or launch directly:
+
+```bash
+python video_editor_gui.py
+```
+
+Or use the batch file:
+
+```bash
+run_video_editor.bat
+```
+
+Options:
+- `-i, --input`: Path to image directory to load on startup
+- `-p, --project`: Load a saved project file on startup
+
+**GUI Features:**
+- See each image as a thumbnail alongside its narration text box
+- Edit narration text for each image in a scrollable interface
+- Set custom duration and transitions per image
+- Preview narration using text-to-speech
+- Save and load projects for later editing
+- Generate video directly from the GUI
 
 ## Naming Pattern Variables
 
@@ -136,6 +231,7 @@ When you record a session, a `workflow.json` file is saved in the output directo
 - Python 3.7+
 - Windows/macOS/Linux
 - Display access for screenshots
+- FFmpeg (bundled with moviepy for video generation)
 
 ## Troubleshooting
 

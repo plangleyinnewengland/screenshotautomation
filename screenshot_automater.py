@@ -102,12 +102,12 @@ class ScreenshotAutomater:
             print(f"  Error capturing screenshot: {e}")
             return None
     
-    def _get_monitor_info(self, x: int, y: int) -> tuple:
+    def _get_monitor_info(self, x: int, y: int) -> dict:
         """
         Determine which monitor contains the given coordinates.
         
         Returns:
-            tuple: (monitor_number, monitor_name, monitor_info_string)
+            dict: Monitor information including resolution for scaling
         """
         try:
             monitors = get_monitors()
@@ -115,12 +115,39 @@ class ScreenshotAutomater:
                 if (monitor.x <= x < monitor.x + monitor.width and
                     monitor.y <= y < monitor.y + monitor.height):
                     name = monitor.name or f"Monitor {i}"
-                    info = f"Monitor {i}: {name} ({monitor.width}x{monitor.height})"
-                    return (i, name, info)
-            # If not found in any monitor bounds, return primary
-            return (1, "Unknown", "Monitor 1 (primary)")
+                    return {
+                        "number": i,
+                        "name": name,
+                        "info": f"Monitor {i}: {name} ({monitor.width}x{monitor.height})",
+                        "width": monitor.width,
+                        "height": monitor.height,
+                        "x_offset": monitor.x,
+                        "y_offset": monitor.y,
+                        "is_primary": monitor.is_primary
+                    }
+            # If not found in any monitor bounds, return primary info
+            primary = monitors[0] if monitors else None
+            return {
+                "number": 1,
+                "name": "Unknown",
+                "info": "Monitor 1 (primary)",
+                "width": primary.width if primary else 1920,
+                "height": primary.height if primary else 1080,
+                "x_offset": 0,
+                "y_offset": 0,
+                "is_primary": True
+            }
         except Exception:
-            return (1, "Unknown", "Monitor detection unavailable")
+            return {
+                "number": 1,
+                "name": "Unknown",
+                "info": "Monitor detection unavailable",
+                "width": 1920,
+                "height": 1080,
+                "x_offset": 0,
+                "y_offset": 0,
+                "is_primary": True
+            }
     
     def _list_monitors(self):
         """Print information about all connected monitors."""
@@ -144,15 +171,25 @@ class ScreenshotAutomater:
             return
         
         # Get monitor information
-        monitor_num, monitor_name, monitor_info = self._get_monitor_info(x, y)
-        print(f"Click detected at ({x}, {y}) - {monitor_info}")
+        monitor_info = self._get_monitor_info(x, y)
+        print(f"Click detected at ({x}, {y}) - {monitor_info['info']}")
+        
+        # Calculate relative position within the monitor (0.0-1.0) for scaling
+        rel_x = (x - monitor_info["x_offset"]) / monitor_info["width"]
+        rel_y = (y - monitor_info["y_offset"]) / monitor_info["height"]
         
         # Record the click position and time
         click_data = {
             "x": x,
             "y": y,
-            "monitor": monitor_num,
-            "monitor_name": monitor_name,
+            "rel_x": rel_x,  # Relative X position (0.0-1.0) for scaling
+            "rel_y": rel_y,  # Relative Y position (0.0-1.0) for scaling
+            "monitor": monitor_info["number"],
+            "monitor_name": monitor_info["name"],
+            "monitor_width": monitor_info["width"],
+            "monitor_height": monitor_info["height"],
+            "monitor_x_offset": monitor_info["x_offset"],
+            "monitor_y_offset": monitor_info["y_offset"],
             "time": time.time() - self.session_start_time,
             "timestamp": datetime.now().isoformat()
         }
@@ -199,8 +236,24 @@ class ScreenshotAutomater:
                 time.sleep(0.1)
         except KeyboardInterrupt:
             self.stop_recording()
+
+    def pause_recording(self):
+        """Pause recording without stopping the session."""
+        if not self.is_recording or self.is_paused:
+            return
+
+        self.is_paused = True
+        print("Recording paused.")
+
+    def resume_recording(self):
+        """Resume a paused recording session."""
+        if not self.is_recording or not self.is_paused:
+            return
+
+        self.is_paused = False
+        print("Recording resumed.")
     
-    def stop_recording(self):
+    def stop_recording(self, prompt_user: bool = True):
         """Stop recording and save the workflow."""
         if not self.is_recording:
             return
@@ -219,9 +272,10 @@ class ScreenshotAutomater:
         print(f"Total screenshots captured: {self.click_count}")
         print(f"Workflow saved to: {self.workflow_file}")
         print("="*50 + "\n")
-        
-        # Prompt user for post-capture action
-        self._prompt_post_capture_action()
+
+        if prompt_user:
+            # Prompt user for post-capture action
+            self._prompt_post_capture_action()
     
     def _save_workflow(self):
         """Save the recorded workflow to a JSON file."""
@@ -448,6 +502,94 @@ class ScreenshotAutomater:
         except Exception as e:
             print(f"Error copying to clipboard: {e}")
 
+    def _get_current_monitors(self) -> dict:
+        """Get information about all current monitors for coordinate scaling."""
+        monitors_info = {}
+        try:
+            monitors = get_monitors()
+            for i, monitor in enumerate(monitors, 1):
+                monitors_info[i] = {
+                    "width": monitor.width,
+                    "height": monitor.height,
+                    "x_offset": monitor.x,
+                    "y_offset": monitor.y,
+                    "name": monitor.name or f"Monitor {i}",
+                    "is_primary": monitor.is_primary
+                }
+        except Exception:
+            # Fallback to a default monitor
+            monitors_info[1] = {
+                "width": 1920,
+                "height": 1080,
+                "x_offset": 0,
+                "y_offset": 0,
+                "name": "Default",
+                "is_primary": True
+            }
+        return monitors_info
+
+    def _scale_coordinates(self, click: dict, current_monitors: dict) -> tuple:
+        """
+        Scale click coordinates from recorded resolution to current resolution.
+        
+        Uses relative coordinates (rel_x, rel_y) if available for accurate scaling,
+        otherwise falls back to proportional scaling based on monitor dimensions.
+        
+        Args:
+            click: Click data from workflow
+            current_monitors: Current monitor configuration
+            
+        Returns:
+            tuple: (scaled_x, scaled_y)
+        """
+        original_monitor = click.get("monitor", 1)
+        
+        # Check if we have relative coordinates (new format)
+        if "rel_x" in click and "rel_y" in click:
+            # Use relative coordinates for accurate replay
+            rel_x = click["rel_x"]
+            rel_y = click["rel_y"]
+            
+            # Find a matching monitor or use primary/first available
+            if original_monitor in current_monitors:
+                curr_mon = current_monitors[original_monitor]
+            elif 1 in current_monitors:
+                curr_mon = current_monitors[1]
+            else:
+                curr_mon = list(current_monitors.values())[0]
+            
+            # Scale relative coordinates to current monitor
+            new_x = int(curr_mon["x_offset"] + rel_x * curr_mon["width"])
+            new_y = int(curr_mon["y_offset"] + rel_y * curr_mon["height"])
+            return (new_x, new_y)
+        
+        # Fallback: Proportional scaling based on recorded monitor dimensions
+        orig_width = click.get("monitor_width")
+        orig_height = click.get("monitor_height")
+        orig_x_offset = click.get("monitor_x_offset", 0)
+        orig_y_offset = click.get("monitor_y_offset", 0)
+        
+        if orig_width and orig_height:
+            # Find matching current monitor
+            if original_monitor in current_monitors:
+                curr_mon = current_monitors[original_monitor]
+            elif 1 in current_monitors:
+                curr_mon = current_monitors[1]
+            else:
+                curr_mon = list(current_monitors.values())[0]
+            
+            # Calculate position relative to the original monitor
+            rel_x = (click["x"] - orig_x_offset) / orig_width
+            rel_y = (click["y"] - orig_y_offset) / orig_height
+            
+            # Apply to current monitor
+            new_x = int(curr_mon["x_offset"] + rel_x * curr_mon["width"])
+            new_y = int(curr_mon["y_offset"] + rel_y * curr_mon["height"])
+            return (new_x, new_y)
+        
+        # No scaling info available - use original coordinates
+        return (click["x"], click["y"])
+
     def load_workflow(self, workflow_path: str = None) -> bool:
         """Load a previously recorded workflow."""
         if workflow_path is None:
@@ -516,6 +658,18 @@ class ScreenshotAutomater:
         print(f"Delay multiplier: {delay_multiplier}x")
         print(f"Minimum delay: {min_delay}s")
         print("-"*50)
+        
+        # Get current monitor configuration for coordinate scaling
+        current_monitors = self._get_current_monitors()
+        has_scaling_info = any("rel_x" in click or "monitor_width" in click for click in self.workflow)
+        
+        if has_scaling_info:
+            print("Resolution scaling: ENABLED (coordinates will be adjusted)")
+        else:
+            print("Resolution scaling: DISABLED (legacy workflow - re-record for scaling)")
+        
+        self._list_monitors()
+        print("-"*50)
         print("Starting in 3 seconds... (move mouse to corner to abort)")
         print("="*50 + "\n")
         
@@ -530,9 +684,10 @@ class ScreenshotAutomater:
             except pyautogui.FailSafeException:
                 print("\nReplay aborted by user (mouse moved to corner)")
                 break
-                
-            x = click["x"]
-            y = click["y"]
+            
+            # Scale coordinates to current resolution
+            x, y = self._scale_coordinates(click, current_monitors)
+            orig_x, orig_y = click["x"], click["y"]
             click_time = click.get("time", 0)
             
             # Calculate delay
@@ -544,7 +699,10 @@ class ScreenshotAutomater:
             
             previous_time = click_time
             
-            print(f"[{i+1}/{len(self.workflow)}] Clicking at ({x}, {y})")
+            if (x, y) != (orig_x, orig_y):
+                print(f"[{i+1}/{len(self.workflow)}] Clicking at ({x}, {y}) [scaled from ({orig_x}, {orig_y})]")
+            else:
+                print(f"[{i+1}/{len(self.workflow)}] Clicking at ({x}, {y})")
             
             # Move mouse and click
             pyautogui.moveTo(x, y, duration=0.2)
@@ -642,6 +800,35 @@ Examples:
         help="Don't capture screenshots during replay"
     )
     
+    # Video command
+    video_parser = subparsers.add_parser("video", help="Create video from images with narration")
+    video_parser.add_argument(
+        "-i", "--input",
+        help="Path to image directory or workflow JSON file"
+    )
+    video_parser.add_argument(
+        "-o", "--output",
+        help="Output video file path"
+    )
+    video_parser.add_argument(
+        "-p", "--project",
+        help="Load a saved video project file"
+    )
+    
+    # Editor command (GUI)
+    editor_parser = subparsers.add_parser("editor", help="Open visual editor for adding narration to images")
+    editor_parser.add_argument(
+        "-i", "--input",
+        help="Path to image directory to load on startup"
+    )
+    editor_parser.add_argument(
+        "-p", "--project",
+        help="Load a saved project file on startup"
+    )
+    
+    # GUI command
+    gui_parser = subparsers.add_parser("gui", help="Open the main graphical user interface")
+    
     args = parser.parse_args()
     
     if args.command == "record":
@@ -661,6 +848,48 @@ Examples:
             min_delay=args.min_delay,
             capture_screenshots=not args.no_capture
         )
+    elif args.command == "video":
+        from video_generator import VideoGenerator
+        generator = VideoGenerator()
+        
+        if args.project:
+            # Load saved project
+            config = generator.load_project(args.project)
+            if config:
+                generator.generate_video(config)
+        elif args.input:
+            input_path = Path(args.input)
+            if input_path.suffix.lower() == '.json':
+                # Load from workflow
+                config = generator.generate_from_workflow(str(input_path))
+            else:
+                # Load from image directory
+                config = generator.interactive_setup(str(input_path))
+            
+            if config:
+                generator.generate_video(config)
+        else:
+            # Interactive setup
+            config = generator.interactive_setup()
+            if config:
+                generator.generate_video(config)
+    elif args.command == "editor":
+        from video_editor_gui import VideoEditorGUI
+        app = VideoEditorGUI()
+        
+        if args.project:
+            # Load project on startup
+            app.root.after(100, lambda: app._load_project_file(args.project))
+        elif args.input:
+            # Load images on startup
+            app.root.after(100, lambda: app._load_images(args.input))
+        
+        app.run()
+    elif args.command == "gui":
+        from screenshot_automater_gui import ScreenshotAutomaterGUI
+        print("Launching Screenshot Automater GUI...")
+        app = ScreenshotAutomaterGUI()
+        app.run()
     else:
         # Interactive mode
         print("\n" + "="*50)
@@ -670,9 +899,12 @@ Examples:
         print("\nSelect mode:")
         print("  1. Record - Capture screenshots on click")
         print("  2. Replay - Replay a recorded workflow")
-        print("  3. Exit")
+        print("  3. Video - Create video from images with narration")
+        print("  4. Video Editor (GUI) - Visual editor for adding narration")
+        print("  5. Main GUI - Open the full graphical interface")
+        print("  6. Exit")
         
-        choice = input("\nEnter choice (1-3): ").strip()
+        choice = input("\nEnter choice (1-6): ").strip()
         
         if choice == "1":
             output_dir = input("Output directory (default: screenshots): ").strip() or "screenshots"
@@ -695,6 +927,48 @@ Examples:
                 workflow_path=workflow_path,
                 output_dir=output_dir
             )
+        elif choice == "3":
+            from video_generator import VideoGenerator
+            generator = VideoGenerator()
+            
+            print("\nVideo generation options:")
+            print("  1. Create video from image directory")
+            print("  2. Create video from workflow (screenshots)")
+            print("  3. Load saved project")
+            
+            video_choice = input("\nEnter choice (1-3): ").strip()
+            
+            if video_choice == "1":
+                image_dir = input("\nEnter path to image directory: ").strip()
+                config = generator.interactive_setup(image_dir)
+                if config:
+                    save_proj = input("\nSave project for later editing? (y/n): ").strip().lower()
+                    if save_proj == 'y':
+                        proj_path = input("Project file path (default: video_project.json): ").strip() or "video_project.json"
+                        generator.save_project(config, proj_path)
+                    generator.generate_video(config)
+                    
+            elif video_choice == "2":
+                workflow_path = input("\nEnter path to workflow.json: ").strip()
+                config = generator.generate_from_workflow(workflow_path)
+                if config:
+                    generator.generate_video(config)
+                    
+            elif video_choice == "3":
+                project_path = input("\nEnter path to project file: ").strip()
+                config = generator.load_project(project_path)
+                if config:
+                    generator.generate_video(config)
+        elif choice == "4":
+            from video_editor_gui import VideoEditorGUI
+            print("\nLaunching Video Narration Editor...")
+            app = VideoEditorGUI()
+            app.run()
+        elif choice == "5":
+            from screenshot_automater_gui import ScreenshotAutomaterGUI
+            print("\nLaunching Screenshot Automater GUI...")
+            app = ScreenshotAutomaterGUI()
+            app.run()
         else:
             print("Exiting...")
             sys.exit(0)
