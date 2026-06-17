@@ -12,6 +12,8 @@ from pathlib import Path
 from datetime import datetime
 from typing import Optional, List, Dict, Callable
 
+from PIL import Image, ImageTk
+
 # Import the core functionality
 try:
     from screenshot_automater import ScreenshotAutomater
@@ -58,6 +60,7 @@ class MonitorDisplay(ttk.LabelFrame):
     
     def __init__(self, parent):
         super().__init__(parent, text="Connected Monitors", padding=10)
+        self.current_monitor_number = None
         
         self.monitor_text = tk.Text(self, height=4, width=50, state=tk.DISABLED,
                                      font=('Consolas', 9))
@@ -66,6 +69,11 @@ class MonitorDisplay(ttk.LabelFrame):
         self.refresh_btn = ttk.Button(self, text="Refresh", command=self.refresh_monitors)
         self.refresh_btn.pack(pady=(5, 0))
         
+        self.refresh_monitors()
+
+    def highlight_monitor(self, monitor_number: Optional[int]):
+        """Highlight the monitor currently being recorded."""
+        self.current_monitor_number = monitor_number
         self.refresh_monitors()
         
     def refresh_monitors(self):
@@ -78,12 +86,42 @@ class MonitorDisplay(ttk.LabelFrame):
             for i, monitor in enumerate(monitors, 1):
                 name = monitor.name or f"Display {i}"
                 primary = " (primary)" if monitor.is_primary else ""
-                info = f"{i}. {name}: {monitor.width}x{monitor.height} at ({monitor.x}, {monitor.y}){primary}\n"
+                marker = "▶ " if i == self.current_monitor_number else "  "
+                info = f"{marker}{i}. {name}: {monitor.width}x{monitor.height} at ({monitor.x}, {monitor.y}){primary}\n"
                 self.monitor_text.insert(tk.END, info)
         except Exception as e:
             self.monitor_text.insert(tk.END, f"Error detecting monitors: {e}")
             
         self.monitor_text.config(state=tk.DISABLED)
+
+    def get_default_monitor_number(self) -> Optional[int]:
+        """Return the primary monitor number, or the first monitor if no primary is reported."""
+        try:
+            monitors = get_monitors()
+            if not monitors:
+                return None
+
+            for i, monitor in enumerate(monitors, 1):
+                if monitor.is_primary:
+                    return i
+
+            return 1
+        except Exception:
+            return None
+
+    def get_monitor_by_number(self, monitor_number: Optional[int]):
+        """Return the screeninfo monitor object for a given monitor number."""
+        if not monitor_number:
+            return None
+
+        try:
+            monitors = get_monitors()
+            if 0 < monitor_number <= len(monitors):
+                return monitors[monitor_number - 1]
+        except Exception:
+            return None
+
+        return None
 
 
 class FolderFilesPreview(ttk.LabelFrame):
@@ -211,15 +249,23 @@ class FolderFilesPreview(ttk.LabelFrame):
 class RecordPanel(ttk.LabelFrame):
     """Panel for recording settings and controls."""
     
-    def __init__(self, parent, on_status_change: Callable = None):
+    def __init__(self, parent, on_status_change: Callable = None, on_monitor_change: Callable = None):
         super().__init__(parent, text="Recording", padding=10)
         self.on_status_change = on_status_change
+        self.on_monitor_change = on_monitor_change
         self.automater: Optional[ScreenshotAutomater] = None
         self.is_recording = False
         self.listener = None
         self.click_count = 0
+        self.monitor_display: Optional[MonitorDisplay] = None
+        self._preview_photo = None
+        self._preview_refresh_job = None
         
         self._setup_ui()
+
+    def set_monitor_display(self, monitor_display: MonitorDisplay):
+        """Attach the shared monitor display so the preview can use its selection."""
+        self.monitor_display = monitor_display
         
     def _setup_ui(self):
         """Set up the recording panel UI."""
@@ -318,6 +364,33 @@ class RecordPanel(ttk.LabelFrame):
         
         self.indicator_label = ttk.Label(self.indicator_frame, text="Not Recording")
         self.indicator_label.pack(side=tk.LEFT)
+
+        # Active monitor indicator
+        monitor_frame = ttk.Frame(self)
+        monitor_frame.pack(fill=tk.X, pady=(0, 10))
+
+        ttk.Label(monitor_frame, text="Recording Screen:").pack(side=tk.LEFT)
+        self.monitor_status_label = ttk.Label(monitor_frame, text="None", foreground='gray')
+        self.monitor_status_label.pack(side=tk.LEFT, padx=5)
+
+        # Visual preview of the recording screen
+        preview_frame = ttk.Frame(self)
+        preview_frame.pack(fill=tk.X, pady=(0, 10))
+
+        ttk.Label(preview_frame, text="Recording Screen Preview:").pack(anchor=tk.W)
+        self.preview_label = ttk.Label(preview_frame, text="No preview available", padding=4)
+        self.preview_label.pack(anchor=tk.W, pady=(4, 0))
+
+        self.preview_canvas = tk.Label(preview_frame, borderwidth=1, relief=tk.SOLID, background='white')
+        self.preview_canvas.pack(fill=tk.X, pady=(4, 0))
+        self.preview_canvas.bind("<Button-1>", lambda _event: self.refresh_recording_preview())
+
+        ttk.Label(
+            preview_frame,
+            text="Click the preview to refresh it.",
+            font=('Segoe UI', 8),
+            foreground='gray'
+        ).pack(anchor=tk.W, pady=(2, 0))
         
         # Control buttons
         btn_frame = ttk.Frame(self)
@@ -338,6 +411,94 @@ class RecordPanel(ttk.LabelFrame):
             state=tk.DISABLED
         )
         self.stop_btn.pack(side=tk.LEFT, padx=5)
+
+        self.pause_btn = ttk.Button(
+            btn_frame,
+            text="Pause Recording",
+            command=self._pause_or_resume_recording,
+            state=tk.DISABLED
+        )
+        self.pause_btn.pack(side=tk.LEFT, padx=5)
+
+    def refresh_recording_preview(self):
+        """Capture and display a thumbnail of the monitor that will be recorded."""
+        monitor_display = self.monitor_display
+        if not monitor_display:
+            self.preview_label.config(text="Preview unavailable")
+            self.preview_canvas.config(image='', text='No preview available')
+            self._preview_photo = None
+            return
+
+        monitor_number = monitor_display.current_monitor_number or monitor_display.get_default_monitor_number()
+        monitor = monitor_display.get_monitor_by_number(monitor_number)
+        if not monitor:
+            self.preview_label.config(text="Preview unavailable")
+            self.preview_canvas.config(image='', text='No preview available')
+            self._preview_photo = None
+            return
+
+        try:
+            screenshot = pyautogui.screenshot(region=(monitor.x, monitor.y, monitor.width, monitor.height))
+            thumbnail = screenshot.copy()
+            thumbnail.thumbnail((360, 200))
+            self._preview_photo = ImageTk.PhotoImage(thumbnail)
+
+            monitor_name = monitor.name or f"Display {monitor_number}"
+            primary = " (primary)" if monitor.is_primary else ""
+            self.preview_label.config(
+                text=f"{monitor_number}. {monitor_name}: {monitor.width}x{monitor.height} at ({monitor.x}, {monitor.y}){primary}"
+            )
+            self.preview_canvas.config(image=self._preview_photo, text='')
+        except Exception as exc:
+            self.preview_label.config(text=f"Preview unavailable: {exc}")
+            self.preview_canvas.config(image='', text='No preview available')
+            self._preview_photo = None
+
+    def _schedule_preview_refresh(self):
+        """Refresh the monitor preview periodically while recording is active."""
+        if not self.is_recording:
+            self._preview_refresh_job = None
+            return
+
+        self.refresh_recording_preview()
+        self._preview_refresh_job = self.after(3000, self._schedule_preview_refresh)
+
+    def _cancel_preview_refresh(self):
+        """Stop the periodic preview refresh loop."""
+        if self._preview_refresh_job is not None:
+            self.after_cancel(self._preview_refresh_job)
+            self._preview_refresh_job = None
+
+    def _set_monitor_status(self, text: str, color: str = 'gray'):
+        """Update the active monitor indicator."""
+        self.monitor_status_label.config(text=text, foreground=color)
+
+    def _set_recording_indicator(self, state: str):
+        """Update the recording state indicator."""
+        if state == 'recording':
+            self.indicator_canvas.itemconfig(self.indicator_circle, fill='red', outline='darkred')
+            self.indicator_label.config(text="Recording")
+        elif state == 'paused':
+            self.indicator_canvas.itemconfig(self.indicator_circle, fill='gold', outline='darkgoldenrod')
+            self.indicator_label.config(text="Paused")
+        else:
+            self.indicator_canvas.itemconfig(self.indicator_circle, fill='gray', outline='darkgray')
+            self.indicator_label.config(text="Not Recording")
+
+    def _update_monitor_display(self, monitor_info: Optional[dict]):
+        """Update the monitor label and the shared monitor list."""
+        if not monitor_info:
+            self._set_monitor_status("None", 'gray')
+            if self.on_monitor_change:
+                self.on_monitor_change(None)
+            self.refresh_recording_preview()
+            return
+
+        label = monitor_info.get('info', 'Unknown monitor')
+        self._set_monitor_status(label, 'black')
+        if self.on_monitor_change:
+            self.on_monitor_change(monitor_info.get('number'))
+        self.refresh_recording_preview()
         
     def _browse_output_dir(self):
         """Browse for output directory."""
@@ -360,6 +521,10 @@ class RecordPanel(ttk.LabelFrame):
             naming_pattern=self.naming_var.get(),
             image_format=self.format_var.get()
         )
+        self.automater.is_recording = True
+        self.automater.is_paused = False
+        self.automater.click_count = 0
+        self.automater.workflow = []
         
         self.is_recording = True
         self.click_count = 0
@@ -368,11 +533,14 @@ class RecordPanel(ttk.LabelFrame):
         # Update UI
         self.start_btn.config(state=tk.DISABLED)
         self.stop_btn.config(state=tk.NORMAL)
+        self.pause_btn.config(state=tk.NORMAL, text="Pause Recording")
         self.output_dir_entry.config(state=tk.DISABLED)
         
         # Update indicator
-        self.indicator_canvas.itemconfig(self.indicator_circle, fill='red')
-        self.indicator_label.config(text="Recording...")
+        self._set_recording_indicator('recording')
+        self._set_monitor_status("Waiting for the first click...", 'gray')
+        self.refresh_recording_preview()
+        self._schedule_preview_refresh()
         
         if self.on_status_change:
             self.on_status_change("Recording in progress - Click anywhere to capture")
@@ -389,23 +557,28 @@ class RecordPanel(ttk.LabelFrame):
             return
             
         self.is_recording = False
-        
+
         if self.listener:
             self.listener.stop()
             self.listener = None
-        
-        # Save workflow
+
+        self._cancel_preview_refresh()
+
+        # Save workflow without the CLI post-capture prompt
         if self.automater:
-            self.automater._save_workflow()
+            self.automater.stop_recording(prompt_user=False)
             
         # Update UI
         self.start_btn.config(state=tk.NORMAL)
         self.stop_btn.config(state=tk.DISABLED)
+        self.pause_btn.config(state=tk.DISABLED, text="Pause Recording")
         self.output_dir_entry.config(state=tk.NORMAL)
         
         # Update indicator
-        self.indicator_canvas.itemconfig(self.indicator_circle, fill='gray')
-        self.indicator_label.config(text="Not Recording")
+        self._set_recording_indicator('stopped')
+        self._set_monitor_status("None", 'gray')
+        if self.on_monitor_change:
+            self.on_monitor_change(None)
         
         if self.on_status_change:
             self.on_status_change(f"Recording stopped - {self.click_count} screenshots captured")
@@ -419,6 +592,24 @@ class RecordPanel(ttk.LabelFrame):
         )
         if result == 'yes':
             self._open_folder(output_dir)
+
+    def _pause_or_resume_recording(self):
+        """Toggle recording pause state."""
+        if not self.is_recording or not self.automater:
+            return
+
+        if self.automater.is_paused:
+            self.automater.resume_recording()
+            self.pause_btn.config(text="Pause Recording")
+            self._set_recording_indicator('recording')
+            if self.on_status_change:
+                self.on_status_change("Recording resumed - Click anywhere to capture")
+        else:
+            self.automater.pause_recording()
+            self.pause_btn.config(text="Resume Recording")
+            self._set_recording_indicator('paused')
+            if self.on_status_change:
+                self.on_status_change("Recording paused - Clicks are ignored until resumed")
             
     def _on_click(self, x: int, y: int, button, pressed: bool):
         """Handle mouse click events."""
@@ -427,16 +618,22 @@ class RecordPanel(ttk.LabelFrame):
             
         if not self.is_recording or not self.automater:
             return
+
+        if self.automater.is_paused:
+            return
             
         # Record click and capture screenshot
         self.automater._on_click(x, y, button, pressed)
         self.click_count = self.automater.click_count
+
+        monitor_info = self.automater._get_monitor_info(x, y)
         
         # Update UI from main thread
         self.after(10, self._update_stats)
         self.after(10, lambda: self.last_capture_label.config(
             text=f"Last: ({x}, {y}) at {datetime.now().strftime('%H:%M:%S')}"
         ))
+        self.after(10, lambda info=monitor_info: self._update_monitor_display(info))
         
     def _update_stats(self):
         """Update the stats display."""
@@ -706,6 +903,7 @@ class StoryboardPanel(ttk.LabelFrame):
         super().__init__(parent, text="Storyboard Generator", padding=10)
         self.on_status_change = on_status_change
         self.is_generating = False
+        self.generate_buttons = []
         self._setup_ui()
 
     def _setup_ui(self):
@@ -719,6 +917,18 @@ class StoryboardPanel(ttk.LabelFrame):
             side=tk.LEFT, padx=5, fill=tk.X, expand=True
         )
         ttk.Button(folder_frame, text="Browse…", command=self._browse_folder).pack(side=tk.LEFT)
+
+        # Top actions stay visible even when the panel is long
+        top_actions = ttk.Frame(self)
+        top_actions.pack(fill=tk.X, pady=(0, 6))
+        self.generate_btn_top = ttk.Button(
+            top_actions,
+            text="Generate Storyboard",
+            command=self._generate,
+            style="Accent.TButton"
+        )
+        self.generate_btn_top.pack(side=tk.LEFT, padx=(0, 5))
+        self.generate_buttons.append(self.generate_btn_top)
 
         # Image preview list
         self.images_preview = FolderFilesPreview(
@@ -902,8 +1112,14 @@ class StoryboardPanel(ttk.LabelFrame):
             command=self._generate, style="Accent.TButton"
         )
         self.generate_btn.pack(side=tk.LEFT, padx=5)
+        self.generate_buttons.append(self.generate_btn)
         ttk.Button(btn_frame, text="Open Output Folder",
                    command=self._open_output_folder).pack(side=tk.LEFT, padx=5)
+
+    def _set_generate_buttons_state(self, state: str):
+        """Keep all Generate buttons enabled/disabled together."""
+        for btn in self.generate_buttons:
+            btn.config(state=state)
 
     # ── Browse helpers ─────────────────────────────────────────────────
 
@@ -1059,7 +1275,7 @@ class StoryboardPanel(ttk.LabelFrame):
             return
 
         self.is_generating = True
-        self.generate_btn.config(state=tk.DISABLED)
+        self._set_generate_buttons_state(tk.DISABLED)
         self.progress_bar["value"] = 0
         self._clear_log()
 
@@ -1111,7 +1327,7 @@ class StoryboardPanel(ttk.LabelFrame):
 
     def _generation_complete(self, count: int):
         self.is_generating = False
-        self.generate_btn.config(state=tk.NORMAL)
+        self._set_generate_buttons_state(tk.NORMAL)
         self.progress_bar["value"] = 100
         msg = f"Done — {count} screenshot slide(s) created."
         self.progress_label.config(text=msg)
@@ -1125,7 +1341,7 @@ class StoryboardPanel(ttk.LabelFrame):
 
     def _generation_error(self, error: str):
         self.is_generating = False
-        self.generate_btn.config(state=tk.NORMAL)
+        self._set_generate_buttons_state(tk.NORMAL)
         self.progress_label.config(text=f"Error: {error}")
         self._log(f"ERROR: {error}")
         if self.on_status_change:
@@ -1244,12 +1460,36 @@ class ScreenshotAutomaterGUI:
         record_frame = ttk.Frame(self.notebook, padding=10)
         self.notebook.add(record_frame, text="  Record  ")
         
-        self.record_panel = RecordPanel(record_frame, on_status_change=self._update_status)
+        self.record_panel = RecordPanel(
+            record_frame,
+            on_status_change=self._update_status,
+            on_monitor_change=self._highlight_recording_monitor
+        )
         self.record_panel.pack(fill=tk.BOTH, expand=True, pady=(0, 10))
         
         # Monitor display in record tab
         self.monitor_display = MonitorDisplay(record_frame)
         self.monitor_display.pack(fill=tk.X)
+        default_monitor_number = self.monitor_display.get_default_monitor_number()
+        self._highlight_recording_monitor(default_monitor_number)
+        self.record_panel.set_monitor_display(self.monitor_display)
+
+        try:
+            monitors = get_monitors()
+            if default_monitor_number and 0 < default_monitor_number <= len(monitors):
+                monitor = monitors[default_monitor_number - 1]
+                monitor_name = monitor.name or f"Display {default_monitor_number}"
+                primary = " (primary)" if monitor.is_primary else ""
+                self.record_panel._update_monitor_display({
+                    "number": default_monitor_number,
+                    "info": f"{default_monitor_number}. {monitor_name}: {monitor.width}x{monitor.height} at ({monitor.x}, {monitor.y}){primary}",
+                })
+            else:
+                self.record_panel._update_monitor_display(None)
+        except Exception:
+            self.record_panel._update_monitor_display(None)
+
+        self.record_panel.refresh_recording_preview()
         
         # Replay tab
         replay_frame = ttk.Frame(self.notebook, padding=10)
@@ -1274,6 +1514,10 @@ class ScreenshotAutomaterGUI:
     def _update_status(self, message: str):
         """Update the status bar."""
         self.status_bar.set_status(message)
+
+    def _highlight_recording_monitor(self, monitor_number: Optional[int]):
+        """Highlight the monitor currently being recorded."""
+        self.monitor_display.highlight_monitor(monitor_number)
         
     def _open_screenshots_folder(self):
         """Open a screenshots folder."""
@@ -1335,7 +1579,8 @@ RECORDING:
 2. Choose image format (PNG recommended)
 3. Click "Start Recording"
 4. Click anywhere on screen to capture screenshots
-5. Click "Stop Recording" when done
+5. Use "Pause Recording" to temporarily ignore clicks
+6. Click "Stop Recording" when done
 
 REPLAY:
 1. Load a workflow.json file

@@ -236,8 +236,24 @@ class ScreenshotAutomater:
                 time.sleep(0.1)
         except KeyboardInterrupt:
             self.stop_recording()
+
+    def pause_recording(self):
+        """Pause recording without stopping the session."""
+        if not self.is_recording or self.is_paused:
+            return
+
+        self.is_paused = True
+        print("Recording paused.")
+
+    def resume_recording(self):
+        """Resume a paused recording session."""
+        if not self.is_recording or not self.is_paused:
+            return
+
+        self.is_paused = False
+        print("Recording resumed.")
     
-    def stop_recording(self):
+    def stop_recording(self, prompt_user: bool = True):
         """Stop recording and save the workflow."""
         if not self.is_recording:
             return
@@ -256,9 +272,10 @@ class ScreenshotAutomater:
         print(f"Total screenshots captured: {self.click_count}")
         print(f"Workflow saved to: {self.workflow_file}")
         print("="*50 + "\n")
-        
-        # Prompt user for post-capture action
-        self._prompt_post_capture_action()
+
+        if prompt_user:
+            # Prompt user for post-capture action
+            self._prompt_post_capture_action()
     
     def _save_workflow(self):
         """Save the recorded workflow to a JSON file."""
